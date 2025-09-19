@@ -18,3 +18,10 @@ Up to 4 notes (cluster) can be sent simultanously. A simple 8x2 LCD character di
 </p>
 
 A 5-degrees switch joystick is used for selecting the foundamental note and the cluster; it also allows the configuration of the midi channel, the pitch bend depth, the pitch bend message (MSB-LSB or MSB only).
+
+
+*Schematics*
+
+<p align="center">
+<img width="800" src="/doc/assets/images/schematics.jpg")
+</p>
