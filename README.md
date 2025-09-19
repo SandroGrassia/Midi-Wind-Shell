@@ -4,7 +4,7 @@
 <img width="400" src="/doc/assets/images/shell_small.jpg")
 </p>
 
-It's a wind midi controller installed in a shell. This project was designed and realized in 2010 using an Arduino Mini 04; probably any microcontroller with at least 2 analog and 12 digital GPIOs can be used.
+It's a wind midi controller installed in a shell. This project was designed and realized in 2011 using an Arduino Mini 04; probably any microcontroller with at least 2 analog and 12 digital GPIOs can be used.
 
 Basically, the wind shell uses breath for volume control (CC7) and a soft potentiometer for pitch-bend change.
 Up to 4 notes (cluster) can be sent simultanously. A simple 8x2 LCD character display with parallel bus is used to show breath level and pitch bend position.
