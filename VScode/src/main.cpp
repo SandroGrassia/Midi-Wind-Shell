@@ -137,8 +137,25 @@ void setup()
   digitalWrite(12, HIGH);
   pinMode(13, OUTPUT);
 
-  // Wind Sensor offset
-  vol_value_offset = analogRead(vol_pin);
+  // Calibrate wind sensor offset from readings taken over five seconds.
+  constexpr unsigned long wind_calibration_duration_ms = 5000;
+  uint32_t wind_calibration_sum = 0;
+  uint16_t wind_calibration_samples = 0;
+  const unsigned long wind_calibration_start = millis();
+
+  lcd.clear();
+  lcd.print("CAL 5s");
+  lcd.setCursor(0, 1);
+  lcd.print("NO BLOW");
+
+  while (millis() - wind_calibration_start < wind_calibration_duration_ms)
+  {
+    wind_calibration_sum += analogRead(vol_pin);
+    ++wind_calibration_samples;
+    delay(10);
+  }
+
+  vol_value_offset = wind_calibration_sum / wind_calibration_samples;
 
   // Setup pitch bend range
   Midi_pitch_range(pitch_range / 2); // pitch_range/2 indica il numero di semitoni +/- per un'estensione totale pari a pitch_range
