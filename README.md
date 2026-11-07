@@ -4,15 +4,15 @@
 <img width="800" src="doc/assets/images/shell.jpg">
 </p>
 
-It's a wind midi controller installed in a shell. This project was designed and realized in 2011 using an Arduino Mini 04; probably any microcontroller with at least 2 analog and 12 digital GPIOs can be used.
-Up to 4 notes (cluster) can be sent simultanously to an external synth.
+This wind MIDI controller is housed inside a shell. It was designed and built in 2011 using an Arduino Mini 04. Other microcontrollers may also work, provided they have at least two analog inputs and twelve digital GPIO pins.
+It can send clusters of up to four notes to an external synthesizer.
 
-The wind shell uses breath for volume control (CC7); the mouthpiece is attached on top of the shell.
+Breath pressure controls the volume (MIDI CC 7), and the mouthpiece is mounted on top of the shell.
 <p align="center">
 <img width="400" src="doc/assets/images/mouth.jpg">
 </p>
 
-The open wind sensor is made with an LED, a photoresistor, and a dark barrier moved by breath, which modulates the amount of light from the LED that reaches the photoresistor.
+The breath sensor is an optical design made from an LED, a photoresistor, and a dark barrier. Breath moves the barrier, changing how much light from the LED reaches the photoresistor.
 
 <p align="center">
 <img width="400" src="doc/assets/images/wind_1.jpg">
@@ -22,18 +22,18 @@ The open wind sensor is made with an LED, a photoresistor, and a dark barrier mo
 <img width="400" src="doc/assets/images/wind_2.jpg">
 </p>
 
-Inside the shell, a soft potentiometer is used for pitch modulation.
+Inside the shell, a soft potentiometer provides pitch modulation.
 <p align="center">
 <img width="400" src="doc/assets/images/pitch.jpg">
 </p>
 
-A simple 8x2 LCD character display with parallel bus is used to show breath level and pitch bend position.
+A simple 8×2 character LCD with a parallel interface displays the breath level and pitch-bend position.
 
 <p align="center">
 <img width="400" src="doc/assets/images/display.jpg">
 </p>
 
-A 5-degrees switch joystick is used for selecting the foundamental note and the cluster; it also allows the configuration of the midi channel, the pitch bend depth, the pitch bend message (MSB-LSB or MSB only).
+A five-way joystick selects the root note and note cluster. It also lets you configure the MIDI channel, pitch-bend range, and pitch-bend message format (MSB and LSB, or MSB only).
 
 <p align="center">
 <img width="400" src="doc/assets/images/joystick.jpg">
