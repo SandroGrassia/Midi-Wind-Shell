@@ -39,6 +39,24 @@ A five-way joystick selects the root note and note cluster. It also lets you con
 <img width="400" src="doc/assets/images/joystick.jpg">
 </p>
 
+## Build
+
+Open the repository root in Visual Studio Code with the PlatformIO IDE extension installed, then run **PlatformIO: Build**.
+
+Alternatively, from a PlatformIO terminal in the repository root, run:
+
+```sh
+pio run
+```
+
+The `platformio.ini` file targets the Arduino Mini ATmega168 and declares the LiquidCrystal dependency. PlatformIO installs the required build tools and library automatically. The compiled firmware is written to `.pio/build/miniatmega168/firmware.hex`.
+
+On Windows, if PlatformIO is installed in its default location but `pio` is not on your PATH, use PowerShell:
+
+```powershell
+& "$env:USERPROFILE/.platformio/penv/Scripts/platformio.exe" run
+```
+
 ## Technical overview
 
 The controller reads an optical breath sensor, a soft potentiometer, and a five-way joystick. It maps the breath sensor reading to a 7-bit value from 0 to 127 (128 levels), which controls MIDI volume (Control Change 7). A value of 3 or higher triggers a Note On for the selected root note and chord; before that, the controller sends Note Off for the previously tracked root note and chord. When the breath value falls below 1, it resets the breath-detection state so another note can be triggered; this transition does not itself send Note Off. The soft potentiometer controls pitch bend, while the joystick selects the root note and chord and provides access to the MIDI channel, pitch-bend range, and message resolution settings. MIDI data is sent over the serial port at 31,250 baud to an external synthesizer. An 8x2 LCD with a parallel interface displays breath level, pitch bend, and setup information.
