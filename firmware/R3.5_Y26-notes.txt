@@ -1,0 +1,11 @@
+R3.5 Y26
+
+Fixes stuck notes after changing the root note or chord multiple times. Note Off messages now match the exact notes and MIDI channel used at Note On.
+
+Always sends volume zero when breath stops, including changes below the volume deadband. Preserves the existing articulation: notes are released at the next breath attack, or immediately when entering setup.
+
+Omits chord tones above MIDI note 127 and removes debug text from MIDI output.
+
+Synchronizes pitch centering and bend range with the synthesizer, including channel changes. Improves menu navigation, center-button debounce, playback after setup, and joystick repeat timing. Entering setup preserves the startup breath calibration.
+
+Includes R3.5_Y26.hex for Arduino Mini ATmega168. Validated with a PlatformIO AVR build and host regression tests, including all 8,320 root/chord combinations. Physical sensor and synthesizer testing remains necessary.
