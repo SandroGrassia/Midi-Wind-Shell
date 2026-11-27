@@ -52,7 +52,10 @@ uint8_t lsb = 0;              // byte LSB del Pitch_bend
 // Wind sensor (volume)
 constexpr int vol_pin = 4;     // volume (analog)
 constexpr int vol_upthr = 800; // soglia superiore del valore in ingresso del volume che da vol=127
-int wind_state = 0;
+int wind_state = 0; // 0: idle, 1: blowing, 2: volume release
+constexpr unsigned long breath_release_ms = 100;
+unsigned long breath_release_started = 0;
+int breath_release_volume = 0;
 int vol_value = 0;
 int vol_value_0 = 0;
 int vol_value_offset = 0; // offset del sensore di pressione
@@ -222,8 +225,8 @@ void loop()
         Show_page(7); // visualizza volume
     }
 
-    // Keep the documented legato behaviour: release old notes at the next attack.
-    if (wind_state == 0 && vol_value >= 3)
+    // A new breath can interrupt the release, closing old notes before the attack.
+    if (wind_state != 1 && vol_value >= 3)
     {
         Note_off();
         if (pitch_reset_pending)
@@ -241,15 +244,38 @@ void loop()
     }
     else if (wind_state == 1)
     {
-        // Always transmit silence, even inside the controller deadband.
-        if (vol_value == 0 || abs(vol_value - vol_value_0) > 5)
+        if (vol_value == 0)
+        {
+            wind_state = 2;
+            breath_release_started = millis();
+            breath_release_volume = vol_value_0;
+        }
+        else if (abs(vol_value - vol_value_0) > 5)
         {
             Midi(176 + midi, 7, vol_value);
             vol_value_0 = vol_value;
         }
-        if (vol_value == 0)
+    }
+
+    // Non-blocking 100 ms ramp from the last transmitted volume.
+    if (wind_state == 2)
+    {
+        const unsigned long elapsed = millis() - breath_release_started;
+        if (elapsed >= breath_release_ms)
         {
+            Midi(176 + active_notes.channel, 7, 0);
+            vol_value_0 = 0;
+            Note_off();
             wind_state = 0;
+        }
+        else
+        {
+            const int release_volume = (breath_release_volume * (breath_release_ms - elapsed) + breath_release_ms - 1) / breath_release_ms;
+            if (release_volume != vol_value_0)
+            {
+                Midi(176 + active_notes.channel, 7, release_volume);
+                vol_value_0 = release_volume;
+            }
         }
     }
 

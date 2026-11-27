@@ -44,19 +44,19 @@ A five-way joystick selects the root note and note cluster. It also lets you con
 The release identifier is defined in `include/config.h`. The compiled firmware for Arduino Mini ATmega168 is [R3.5_Y26.hex](firmware/R3.5_Y26.hex).
 
 - Fixed stuck notes after multiple root-note or chord selections: Note Off now uses the exact sounding notes and their original channel.
-- Guaranteed silence at the end of every breath, including small volume changes inside the controller deadband.
+- Added a non-blocking 100 ms volume fade at the end of every breath, followed by Note Off for every active note, including small volume changes inside the controller deadband.
 - Prevented out-of-range chord tones from corrupting MIDI messages.
 - Removed serial debug text from the MIDI output.
 - Synchronized pitch centering and pitch-bend range with the synthesizer when leaving setup or changing MIDI channel.
 - Reworked setup as a non-blocking menu with a debounced center button. Holding the center button no longer repeatedly opens and closes setup; playing resumes on the next loop after exit if breath is present.
 - Preserved startup breath calibration when entering setup, made joystick repeat timing rollover-safe, and fitted all four chord intervals on the LCD.
-- Reduced static RAM usage to 708 bytes out of 1024, compared with 795 bytes in the reviewed working copy.
+- Reduced static RAM usage to 714 bytes out of 1024, compared with 795 bytes in the reviewed working copy.
 
-Note Off remains deferred until the next breath attack, as in previous versions. End-of-breath silence is controlled by CC7 = 0. Setup immediately sends Note Off and resets playback state.
+When breath reaches zero, CC7 fades from its last transmitted value to zero over 100 ms, then all active notes receive Note Off. The fade runs without blocking sensor and joystick processing. A new breath during the fade closes the previous notes before starting the new ones. Setup immediately sends Note Off and resets playback state.
 
 ### Regression checks
 
-The host tests compile the actual firmware against simulated Arduino inputs and capture outgoing MIDI bytes. They cover repeated joystick selection, exact Note Off matching, all 8,320 root/chord combinations, volume zero, menu navigation, channel configuration, and playback after setup.
+The host tests compile the actual firmware against simulated Arduino inputs and capture outgoing MIDI bytes. They cover repeated joystick selection, exact Note Off matching, all 8,320 root/chord combinations, the 100 ms volume fade and Note Off ordering, rapid reattack, menu navigation, channel configuration, and playback after setup.
 
 From the repository root with a C++11 compiler:
 
@@ -87,7 +87,7 @@ On Windows, if PlatformIO is installed in its default location but `pio` is not 
 
 ## Technical overview
 
-The controller reads an optical breath sensor, a soft potentiometer, and a five-way joystick. It maps the breath sensor reading to a 7-bit value from 0 to 127 (128 levels), which controls MIDI volume (Control Change 7). A value of 3 or higher triggers a Note On for the selected root note and chord; before that, the controller sends Note Off for the exact notes previously transmitted, on their original MIDI channel. Joystick changes affect the next attack without overwriting that active-note snapshot. Chord tones above MIDI note 127 are omitted. When the breath value falls below 1, the controller always sends CC7 = 0 and resets the breath-detection state so another note can be triggered; this transition does not itself send Note Off. This preserves the existing articulation: notes remain active silently until the next attack or until setup is opened. The soft potentiometer controls pitch bend, while the joystick selects the root note and chord and provides access to the MIDI channel, pitch-bend range, and message resolution settings. MIDI data is sent over the serial port at 31,250 baud to an external synthesizer. An 8x2 LCD with a parallel interface displays breath level, pitch bend, and setup information.
+The controller reads an optical breath sensor, a soft potentiometer, and a five-way joystick. It maps the breath sensor reading to a 7-bit value from 0 to 127 (128 levels), which controls MIDI volume (Control Change 7). A value of 3 or higher triggers a Note On for the selected root note and chord; before that, the controller sends Note Off for the exact notes previously transmitted, on their original MIDI channel. Joystick changes affect the next attack without overwriting that active-note snapshot. Chord tones above MIDI note 127 are omitted. When the breath value falls below 1, the controller starts a 100 ms linear CC7 fade from the last transmitted volume. At the end of the fade it sends CC7 = 0 followed by Note Off for all active notes on their original channel. A new breath can interrupt the fade: the old notes are closed before the new attack. The soft potentiometer controls pitch bend, while the joystick selects the root note and chord and provides access to the MIDI channel, pitch-bend range, and message resolution settings. MIDI data is sent over the serial port at 31,250 baud to an external synthesizer. An 8x2 LCD with a parallel interface displays breath level, pitch bend, and setup information.
 
 ### Power-on calibration
 

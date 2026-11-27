@@ -62,13 +62,70 @@ int main()
     assert(message(144, 62, 127));
     assert(!message(128, 61, 0));
 
-    // Final CC7 zero must bypass the deadband; retained notes end next attack.
+    // Release must ramp even below the deadband, then send zero before Note Off.
     vol_value_0 = 4;
     analog_inputs[vol_pin] = 0;
     Serial.bytes.clear();
     tick();
-    assert(message(176, 7, 0));
-    assert(wind_state == 0 && active_notes.count == 1);
+    assert(wind_state == 2 && active_notes.count == 1);
+    assert(Serial.bytes.empty());
+    tick(50);
+    assert(message(176, 7, 2));
+    assert(!message(128, 62, 0));
+    tick(49);
+    assert(message(176, 7, 1));
+    assert(active_notes.count == 1);
+    Serial.bytes.clear();
+    tick(1);
+    assert((Serial.bytes == std::vector<uint8_t>{176, 7, 0, 128, 62, 0}));
+    assert(wind_state == 0 && active_notes.count == 0);
+    Serial.bytes.clear();
+    tick(200);
+    assert(Serial.bytes.empty());
+
+    // Full chord release: monotonic volume, no early Note Off, all tones closed.
+    nota = 60;
+    cluster = 41;
+    analog_inputs[vol_pin] = 800;
+    tick();
+    assert(active_notes.count == 5);
+    analog_inputs[vol_pin] = 0;
+    tick();
+    int previous_volume = 127;
+    for (int step = 0; step < 9; ++step)
+    {
+        Serial.bytes.clear();
+        tick(10);
+        assert(vol_value_0 < previous_volume && vol_value_0 > 0);
+        assert(active_notes.count == 5);
+        previous_volume = vol_value_0;
+    }
+    Serial.bytes.clear();
+    tick(10);
+    assert(Serial.bytes.size() == 18);
+    assert(Serial.bytes[0] == 176 && Serial.bytes[1] == 7 && Serial.bytes[2] == 0);
+    for (int n = 60; n <= 64; ++n)
+    {
+        assert(message(128, n, 0));
+    }
+    assert(active_notes.count == 0);
+
+    // Rapid reattack cancels the old release deadline.
+    analog_inputs[vol_pin] = 100;
+    tick();
+    analog_inputs[vol_pin] = 0;
+    tick();
+    tick(50);
+    analog_inputs[vol_pin] = 100;
+    Serial.bytes.clear();
+    tick();
+    assert(message(128, 60, 0) && message(144, 60, 127));
+    assert(Serial.bytes[0] == 128);
+    Serial.bytes.clear();
+    tick(100);
+    assert(!message(128, 60, 0));
+    assert(active_notes.count == 5 && wind_state == 1);
+    All_notes_off();
 
     // Note Off uses exact chord snapshot and original channel.
     Note_off();
@@ -144,5 +201,5 @@ int main()
     assert(active_notes.count == 1 && wind_state == 1);
     All_notes_off();
     assert(active_notes.count == 0 && wind_state == 0 && vol_value_0 == 0);
-    std::cout << "PASS: note tracking, silence, 8320 root/chord combinations, menu, channel and pitch reset\n";
+    std::cout << "PASS: note tracking, 100 ms release, reattack, 8320 root/chord combinations, menu, channel and pitch reset\n";
 }

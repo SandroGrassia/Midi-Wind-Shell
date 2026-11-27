@@ -2,7 +2,7 @@ R3.5 Y26
 
 Fixes stuck notes after changing the root note or chord multiple times. Note Off messages now match the exact notes and MIDI channel used at Note On.
 
-Always sends volume zero when breath stops, including changes below the volume deadband. Preserves the existing articulation: notes are released at the next breath attack, or immediately when entering setup.
+When breath stops, fades volume to zero over 100 ms without blocking controls, then sends Note Off for all active notes. The fade also handles changes below the volume deadband. A new breath during the fade closes the old notes before the new attack. Entering setup releases notes immediately.
 
 Omits chord tones above MIDI note 127 and removes debug text from MIDI output.
 
